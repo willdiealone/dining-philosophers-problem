@@ -6,6 +6,17 @@ import (
 	"time"
 )
 
+var (
+	// определим некоторые переменные
+	hunger    = 3               // столько раз философы будут кушать
+	eatTime   = 1 * time.Second // время для трапизы
+	thinkTime = 3 * time.Second // время на подумать
+	sleepTime = 1 * time.Second // время для сна
+
+	orderMutex    sync.Mutex
+	OrderFinished []string
+)
+
 // 5 философов, 5 вилок, 5 тарелок
 
 // Philosopher Структура в которой хранится информация о них
@@ -24,13 +35,8 @@ var philosophers = []Philosopher{
 	{name: "Locke", leftFork: 3, rightFork: 4},
 }
 
-// определим некоторые переменные
-var hunger = 3                  // столько раз философы будут кушать
-var eatTime = 1 * time.Second   // время для трапизы
-var thinkTime = 3 * time.Second // время на подумать
-var sleepTime = 1 * time.Second // время для сна
-
 func main() {
+	time.Sleep(sleepTime)
 	fmt.Println("Проблема обедающих философов")
 	fmt.Println("----------------------------")
 	fmt.Println("Стол пустой.")
@@ -61,6 +67,8 @@ func dine() {
 	}
 
 	wg.Wait()
+
+	fmt.Println(OrderFinished[:])
 }
 
 func diningProblem(philosopher Philosopher, wg *sync.WaitGroup, forks map[int]*sync.Mutex, seated *sync.WaitGroup) {
@@ -96,6 +104,9 @@ func diningProblem(philosopher Philosopher, wg *sync.WaitGroup, forks map[int]*s
 
 		fmt.Printf("Философ %s положил обе вилки.\n", philosopher.name)
 
-		fmt.Printf("Философ %s покинул стол.\n", philosopher.name)
 	}
+	orderMutex.Lock()
+	fmt.Printf("Философ %s покинул стол.\n", philosopher.name)
+	OrderFinished = append(OrderFinished, philosopher.name)
+	orderMutex.Unlock()
 }
